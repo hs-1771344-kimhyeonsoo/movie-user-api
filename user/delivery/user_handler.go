@@ -41,6 +41,10 @@ func NewUserHandler(g *echo.Group, u user.Usecase, logger *logrus.Logger) {
 	g.GET("/add-playlist", handler.SendAddedPlaylists)
 	g.GET("/change-playlist", handler.SendChangedPlaylists)
 	g.GET("/delete-playlist", handler.SendDeletedPlaylists)
+	g.GET("/banner", handler.SendAllBanners)
+	g.GET("/change-banner", handler.SendUpdatedBanners)
+	g.GET("/add-banner", handler.SendAddedBanners)
+	g.GET("/delete-banner", handler.SendDeletedBanners)
 }
 
 func (h *userHandler) SignUp(c echo.Context) error {
@@ -294,4 +298,65 @@ func (h *userHandler) SendDeletedPlaylists(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, playlists)
+}
+
+func (h *userHandler) SendAllBanners(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	banners, err := h.Usecase.GetAllBanners(ctx)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusOK, nil)
+	}
+
+	return c.JSON(http.StatusOK, banners)
+}
+
+func (h *userHandler) SendUpdatedBanners(c echo.Context) error {
+	ctx := c.Request().Context()
+	params := c.QueryParams()
+	id, _ := strconv.Atoi(params.Get("id"))
+	movieId, _ := strconv.Atoi(params.Get("movie_id"))
+	title := params.Get("title")
+	mediaType := params.Get("type")
+	comment := params.Get("comment")
+
+	banners, err := h.Usecase.UpdateAndGetAllBanners(ctx, id, movieId, title, mediaType, comment)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusOK, nil)
+	}
+
+	return c.JSON(http.StatusOK, banners)
+}
+
+func (h *userHandler) SendAddedBanners(c echo.Context) error {
+	ctx := c.Request().Context()
+	params := c.QueryParams()
+	movieId, _ := strconv.Atoi(params.Get("movie_id"))
+	title := params.Get("title")
+	mediaType := params.Get("type")
+	comment := params.Get("comment")
+
+	banners, err := h.Usecase.AddAndGetAllBanners(ctx, movieId, title, mediaType, comment)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusOK, nil)
+	}
+
+	return c.JSON(http.StatusOK, banners)
+}
+
+func (h *userHandler) SendDeletedBanners(c echo.Context) error {
+	ctx := c.Request().Context()
+	params := c.QueryParams()
+	id, _ := strconv.Atoi(params.Get("id"))
+
+	banners, err := h.Usecase.DeleteAndGetAllBanners(ctx, id)
+	if err != nil {
+		h.logger.Error(err)
+		return c.JSON(http.StatusOK, nil)
+	}
+
+	return c.JSON(http.StatusOK, banners)
 }
